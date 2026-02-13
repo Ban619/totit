@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" href="img/flowers.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+    <title>flowers</title>
+    <style>
+      /* ========================================
+         ROOT & BASE STYLES
+         ======================================== */
+      :root { 
+        --rose: #ff6b8a; 
+        --deep-rose: #ff4d6d; 
+        --wine: #8b1538; 
+        --cream: #fff5f7; 
+        --gold: #d4af37;
+        --bg-color: #e0d7c6;
+        --envelope-base: #f5f5dc;
+        --envelope-flap: #eaddca;
+        --letter-paper: #ffffff;
+        --text-color: #4a4a4a;
+        --accent-red: #a33b3b;
+      }
+
+      * { box-sizing: border-box; }
+
+      body { 
+        background: #000;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Lora', serif;
+        /* Support for iPhone notch and safe areas */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+
+      /* ========================================
+         ENVELOPE SCENE
+         ======================================== */
+      .envelope-scene {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--bg-color);
+        z-index: 10000;
+        transition: opacity 0.8s ease, visibility 0.8s ease;
+      }
+
+      .envelope-scene.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #open-close { display: none; }
+
+      .envelope-wrapper {
+        position: relative;
+        width: 320px;
+        height: 220px;
+        cursor: pointer;
+      }
+
+      .envelope {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-color: var(--envelope-base);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        z-index: 2;
+      }
+
+      .envelope-letter {
+        position: absolute;
+        top: 5px;
+        left: 10px;
+        width: 300px;
+        height: 190px;
+        background-color: var(--letter-paper);
+        z-index: 1;
+        padding: 20px;
+        box-sizing: border-box;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: transform 0.6s ease-in-out 0s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .letter-header {
+        font-family: 'Dancing Script', cursive;
+        font-size: 1.4rem;
+        color: var(--accent-red);
+        text-align: center;
+        margin-bottom: 8px;
+      }
+
+      .letter-content {
+        font-size: 0.62rem;
+        line-height: 1.6;
+        color: var(--text-color);
+        text-align: center;
+      }
+
+      .letter-content p { margin: 3px 0; }
+
+      .flap {
+        position: absolute;
+        top: 0;
+        width: 0;
+        height: 0;
+        border-left: 160px solid transparent;
+        border-right: 160px solid transparent;
+        border-top: 110px solid var(--envelope-flap);
+        transform-origin: top;
+        z-index: 4;
+        transition: transform 0.5s ease-in-out 0.6s, z-index 0s 0.6s;
+      }
+
+      .envelope::before {
+        content: "";
+        position: absolute;
+        z-index: 3;
+        border-left: 160px solid transparent;
+        border-right: 160px solid transparent;
+        border-bottom: 110px solid var(--envelope-base);
+        bottom: 0;
+      }
+
+      .envelope::after {
+        content: "";
+        position: absolute;
+        z-index: 3;
+        border-left: 160px solid var(--envelope-flap);
+        border-right: 160px solid var(--envelope-flap);
+        border-top: 110px solid transparent;
+        border-bottom: 110px solid transparent;
+        top: 0;
+      }
+
+      #open-close:checked ~ .envelope-wrapper .flap {
+        transform: rotateX(180deg);
+        z-index: 0;
+        transition: transform 0.5s ease-in-out 0s, z-index 0s 0.5s;
+      }
+
+      #open-close:checked ~ .envelope-wrapper .envelope-letter {
+        transform: translateY(-120px);
+        z-index: 2;
+        transition: transform 0.7s ease-in-out 0.5s;
+      }
+
+      .tap-hint {
+        position: absolute;
+        bottom: -60px;
+        width: 100%;
+        text-align: center;
+        color: #8b806d;
+        font-size: 0.7rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+      }
+
+      .tap-hint.fade-out {
+        opacity: 0;
+      }
+
+      /* Envelope Seal with Letter Y */
+      .envelope-seal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 35px;
+        height: 35px;
+        background: linear-gradient(135deg, #3b220f, #908177);
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 5;
+        box-shadow: 0 4px 10px rgba(241, 240, 240, 0.3);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+      }
+
+      .envelope-seal::before {
+        content: '';
+        position: absolute;
+        width: 31px;
+        height: 31px;
+        border: 1.5px solid rgba(139, 90, 60, 0.4);
+        border-radius: 50%;
+      }
+
+      .envelope-seal-letter {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #937a7a;
+        z-index: 1;
+        letter-spacing: 1px;
+      }
+
+      #open-close:checked ~ .envelope-wrapper .envelope-seal {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+        pointer-events: none;
+      }
+
+      /* ========================================
+         FLOWERS SCENE
+         ======================================== */
+      .flowers-scene { 
+        transition: opacity 700ms ease, transform 700ms ease;
+        opacity: 0;
+        transform: scale(0.95);
+        position: relative;
+      }
+
+      .flowers-scene.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .flowers-scene * { 
+        animation-play-state: paused !important; 
+      }
+
+      .flowers-scene.active * { 
+        animation-play-state: running !important; 
+      }
+
+      /* ========================================
+         BAN.JPG IMAGE OVERLAY
+         ======================================== */
+      .letter-image-overlay {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 1.5s ease, visibility 1.5s ease;
+        width: 90vw;
+        height: auto;
+        max-height: 85vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+      }
+
+      .letter-image-overlay.show {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .letter-image-overlay img {
+        width: 100%;
+        height: auto;
+        max-height: 85vh;
+        object-fit: contain;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        border-radius: 8px;
+      }
+
+      /* ========================================
+         TEXT PORTRAIT BACKGROUND
+         ======================================== */
+      .text-portrait-bg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        margin: 0;
+        padding: 0;
+        background: #000;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .text-portrait-bg p {
+        margin: 0;
+        padding: 20px;
+        height: 100vh;
+        width: 100vw;
+        box-sizing: border-box;
+        font-family: 'Arial Narrow', sans-serif;    
+        font-size: 4px;
+        line-height: 4px;
+        font-weight: bold;
+        text-align: justify;
+        word-break: break-all;
+        background: url(/mnt/user-data/uploads/1770987096809_image.png) no-repeat center center;
+        background-size: contain;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* ========================================
+         UTILITY & EFFECTS
+         ======================================== */
+      .extra-hidden { 
+        opacity: 0; 
+        transform: translateY(6vh); 
+      }
+      
+      .extra-visible { 
+        opacity: 1; 
+        transform: translateY(0); 
+        transition: opacity 1s ease, transform 1s ease; 
+      }
+
+      /* ========================================
+         RESPONSIVE DESIGN
+         ======================================== */
+      @media (max-width: 600px) {
+        .envelope-wrapper {
+          width: 90vw;
+          max-width: 320px;
+        }
+
+        body {
+          overflow: auto;
+        }
+
+        .envelope-seal {
+          width: 30px;
+          height: 30px;
+        }
+
+        .envelope-seal::before {
+          width: 26px;
+          height: 26px;
+        }
+
+        .envelope-seal-letter {
+          font-size: 0.95rem;
+        }
+      }
+
+      @media screen and (max-width: 768px) {
+        .text-portrait-bg p {
+          font-size: 6px;
+          line-height: 5px;
+          background-size: cover;
+          background-position: center top;
+        }
+
+        .letter-image-overlay {
+          top: 22%;
+          transform: translate(-50%, -22%);
+          width: 90vw;
+          max-height: 58vh;
+          padding: 5px;
+        }
+
+        .letter-image-overlay img {
+          max-height: 58vh;
+          border-radius: 4px;
+        }
+      }
+
+      @media screen and (max-width: 480px) {
+        .letter-image-overlay {
+          top: 20%;
+          transform: translate(-50%, -20%);
+          width: 92vw;
+          max-height: 56vh;
+        }
+
+        .letter-image-overlay img {
+          max-height: 56vh;
+        }
+      }
+
+      /* iPhone 13, 13 Pro, 13 Pro Max, 13 mini specific */
+      @media screen and (max-width: 428px) and (min-height: 800px) {
+        .letter-image-overlay {
+          top: 18%;
+          transform: translate(-50%, -18%);
+          width: 90vw;
+          max-height: 54vh;
+        }
+
+        .letter-image-overlay img {
+          max-height: 54vh;
+        }
+      }
+
+      /* iPhone 13 mini specific */
+      @media screen and (max-width: 375px) and (min-height: 800px) {
+        .letter-image-overlay {
+          top: 17%;
+          transform: translate(-50%, -17%);
+          width: 92vw;
+          max-height: 52vh;
+        }
+
+        .letter-image-overlay img {
+          max-height: 52vh;
+        }
+      }
+    </style>
+</head>
+<body class="container">
+  
+  <!-- Envelope Scene (shown first) -->
+  <div class="envelope-scene" id="envelopeScene">
+    <input type="checkbox" id="open-close">
+    
+    <label for="open-close" class="envelope-wrapper">
+      <div class="flap"></div>
+      <div class="envelope">
+        <div class="envelope-letter">
+          <div class="letter-header">Happy Valentine's Day</div>
+          <div class="letter-content">
+            <br>
+            <p>Whether you believe it or not, it is true.</p>
+            <p>Over the past few months, I've really been admiring you.</p>
+            <p>I haven't quite found the courage to say it in person,<br> but I am hoping this message reaches you.</p>
+            <p>Your attitude says it all.</p>
+          </div>
+        </div>
+      </div>
+      <div class="envelope-seal">
+        <span class="envelope-seal-letter">Y</span>
+      </div>
+      <div class="tap-hint" id="tapHint">tap to open</div>
+    </label>
+  </div>
+
+  <!-- Flowers scene (hidden initially) -->
+  <div class="flowers-scene" id="flowersScene">
+    <!-- Text Portrait Background -->
+    <div class="text-portrait-bg">
+      <p>
+        Ain't never felt this way Can't get enough so stay with me It's not like we got big plans Let's drive around
+        town holding hands And you need to know You're the only one, alright Alright And you need to know That you keep
+        me up all night All night Oh, my heart hurts so good I love you, babe So bad So bad, oh Oh, my heart hurts so
+        good I love you, babe So bad So bad Mad cool in all my clothes Mad warm when you get close to me Slow dance
+        these summer nights Our disco ball's my kitchen light And you need to know That nobody could take your place
+        Your place And you need to know That I'm hella obsessed with your face Your face Oh, my heart hurts so good I
+        love you, babe So bad So bad, oh Oh, my heart hurts so gooaad I love you, babe So bad So bad, oh Oh, my heart
+        hurts so good I love you, babe So bad So bad, oh And you need to know You're the only one, alright Alright And
+        you need to know That you keep me up all night All night Oh, my heart hurts so good I love you, babe So bad So
+        bad, oh Oh, my heart hurts so good I love you, babe So bad So bad, oh So bad, oh Oh, my heart hurt- Oh, my heart
+        hurt- Oh, my heart hurt- So bad, oh
+      </p>
+    </div>
+    
+    <!-- Background music -->
+    <audio id="bg-music" src="img/sea.mp3" loop playsinline preload="auto"></audio>
+    <!-- Pembuat code: https://codepen.io/mdusmanansari/pen/BamepLe -->
+    <div class="night"></div>
+    <div class="flowers">
+      <div class="flower flower--1">
+        <div class="flower__leafs flower__leafs--1">
+          <div class="flower__leaf flower__leaf--1"></div>
+          <div class="flower__leaf flower__leaf--2"></div>
+          <div class="flower__leaf flower__leaf--3"></div>
+          <div class="flower__leaf flower__leaf--4"></div>
+          <div class="flower__white-circle"></div>
+  
+          <div class="flower__light flower__light--1"></div>
+          <div class="flower__light flower__light--2"></div>
+          <div class="flower__light flower__light--3"></div>
+          <div class="flower__light flower__light--4"></div>
+          <div class="flower__light flower__light--5"></div>
+          <div class="flower__light flower__light--6"></div>
+          <div class="flower__light flower__light--7"></div>
+          <div class="flower__light flower__light--8"></div>
+  
+        </div>
+        <div class="flower__line">
+          <div class="flower__line__leaf flower__line__leaf--1"></div>
+          <div class="flower__line__leaf flower__line__leaf--2"></div>
+          <div class="flower__line__leaf flower__line__leaf--3"></div>
+          <div class="flower__line__leaf flower__line__leaf--4"></div>
+          <div class="flower__line__leaf flower__line__leaf--5"></div>
+          <div class="flower__line__leaf flower__line__leaf--6"></div>
+        </div>
+      </div>
+  
+      <div class="flower flower--2">
+        <div class="flower__leafs flower__leafs--2">
+          <div class="flower__leaf flower__leaf--1"></div>
+          <div class="flower__leaf flower__leaf--2"></div>
+          <div class="flower__leaf flower__leaf--3"></div>
+          <div class="flower__leaf flower__leaf--4"></div>
+          <div class="flower__white-circle"></div>
+  
+          <div class="flower__light flower__light--1"></div>
+          <div class="flower__light flower__light--2"></div>
+          <div class="flower__light flower__light--3"></div>
+          <div class="flower__light flower__light--4"></div>
+          <div class="flower__light flower__light--5"></div>
+          <div class="flower__light flower__light--6"></div>
+          <div class="flower__light flower__light--7"></div>
+          <div class="flower__light flower__light--8"></div>
+  
+        </div>
+        <div class="flower__line">
+          <div class="flower__line__leaf flower__line__leaf--1"></div>
+          <div class="flower__line__leaf flower__line__leaf--2"></div>
+          <div class="flower__line__leaf flower__line__leaf--3"></div>
+          <div class="flower__line__leaf flower__line__leaf--4"></div>
+        </div>
+      </div>
+  
+      <div class="flower flower--3">
+        <div class="flower__leafs flower__leafs--3">
+          <div class="flower__leaf flower__leaf--1"></div>
+          <div class="flower__leaf flower__leaf--2"></div>
+          <div class="flower__leaf flower__leaf--3"></div>
+          <div class="flower__leaf flower__leaf--4"></div>
+          <div class="flower__white-circle"></div>
+  
+          <div class="flower__light flower__light--1"></div>
+          <div class="flower__light flower__light--2"></div>
+          <div class="flower__light flower__light--3"></div>
+          <div class="flower__light flower__light--4"></div>
+          <div class="flower__light flower__light--5"></div>
+          <div class="flower__light flower__light--6"></div>
+          <div class="flower__light flower__light--7"></div>
+          <div class="flower__light flower__light--8"></div>
+  
+        </div>
+        <div class="flower__line">
+          <div class="flower__line__leaf flower__line__leaf--1"></div>
+          <div class="flower__line__leaf flower__line__leaf--2"></div>
+          <div class="flower__line__leaf flower__line__leaf--3"></div>
+          <div class="flower__line__leaf flower__line__leaf--4"></div>
+        </div>
+      </div>
+  
+      <div class="grow-ans" style="--d:1.2s">
+        <div class="flower__g-long">
+          <div class="flower__g-long__top"></div>
+          <div class="flower__g-long__bottom"></div>
+        </div>
+      </div>
+  
+      <div class="growing-grass">
+        <div class="flower__grass flower__grass--1">
+          <div class="flower__grass--top"></div>
+          <div class="flower__grass--bottom"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--1"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--2"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--3"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--4"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--5"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--6"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--7"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--8"></div>
+          <div class="flower__grass__overlay"></div>
+        </div>
+      </div>
+  
+      <div class="growing-grass">
+        <div class="flower__grass flower__grass--2">
+          <div class="flower__grass--top"></div>
+          <div class="flower__grass--bottom"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--1"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--2"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--3"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--4"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--5"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--6"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--7"></div>
+          <div class="flower__grass__leaf flower__grass__leaf--8"></div>
+          <div class="flower__grass__overlay"></div>
+        </div>
+      </div>
+  
+      <div class="grow-ans" style="--d:2.4s">
+        <div class="flower__g-right flower__g-right--1">
+          <div class="leaf"></div>
+        </div>
+      </div>
+  
+      <div class="grow-ans" style="--d:2.8s">
+        <div class="flower__g-right flower__g-right--2">
+          <div class="leaf"></div>
+        </div>
+      </div>
+  
+      <div class="grow-ans" style="--d:2.8s">
+        <div class="flower__g-front">
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--1">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--2">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--3">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--4">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--5">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--6">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--7">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__leaf-wrapper flower__g-front__leaf-wrapper--8">
+            <div class="flower__g-front__leaf"></div>
+          </div>
+          <div class="flower__g-front__line"></div>
+        </div>
+      </div>
+  
+      <div class="grow-ans" style="--d:3.2s">
+        <div class="flower__g-fr">
+          <div class="leaf"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--1"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--2"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--3"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--4"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--5"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--6"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--7"></div>
+          <div class="flower__g-fr__leaf flower__g-fr__leaf--8"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--0">
+        <div class="grow-ans" style="--d:3s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:2.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.4s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--1">
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.8s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:4s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--2">
+        <div class="grow-ans" style="--d:4s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.4s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--3">
+        <div class="grow-ans" style="--d:4s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:3s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--4">
+        <div class="grow-ans" style="--d:4s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:3s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--5">
+        <div class="grow-ans" style="--d:4s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:3s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--6">
+        <div class="grow-ans" style="--d:4.2s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.4s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.6s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:4.8s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+  
+      <div class="long-g long-g--7">
+        <div class="grow-ans" style="--d:3s">
+          <div class="leaf leaf--0"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.2s">
+          <div class="leaf leaf--1"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.5s">
+          <div class="leaf leaf--2"></div>
+        </div>
+        <div class="grow-ans" style="--d:3.6s">
+          <div class="leaf leaf--3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Letter Image Overlay (appears after flowers bloom) -->
+  <div class="letter-image-overlay" id="letterImage">
+    <img src="img/ban.jpg" alt="Valentine's Letter">
+  </div>
+
+  <script>
+    // Multiply text for portrait effect
+    (function() {
+      const portraitP = document.querySelector('.text-portrait-bg p');
+      if (portraitP) {
+        const originalText = portraitP.innerHTML;
+        let newText = originalText;
+        
+        for (let i = 0; i < 50; i++) {
+          newText += " " + originalText;
+        }
+        
+        portraitP.innerHTML = newText;
+      }
+    })();
+
+    // Envelope to Flowers transition logic
+    (function() {
+      const checkbox = document.getElementById('open-close');
+      const envelopeScene = document.getElementById('envelopeScene');
+      const flowersScene = document.getElementById('flowersScene');
+      const tapHint = document.getElementById('tapHint');
+      const bgAudio = document.getElementById('bg-music');
+      const letterImage = document.getElementById('letterImage');
+      const envelopeSeal = document.querySelector('.envelope-seal');
+
+      let hasOpened = false;
+      let hasTransitioned = false;
+      let sealBroken = false;
+
+      if (bgAudio) { 
+        bgAudio.loop = true; 
+        bgAudio.preload = 'auto'; 
+      }
+
+      checkbox.addEventListener('change', function() {
+        if (this.checked && !hasOpened) {
+          // First click - open the envelope and break the seal
+          hasOpened = true;
+          
+          if (!sealBroken && envelopeSeal) {
+            sealBroken = true;
+            envelopeSeal.style.opacity = '0';
+            envelopeSeal.style.transform = 'translate(-50%, -50%) scale(0)';
+            envelopeSeal.style.pointerEvents = 'none';
+          }
+          
+          // Fade out tap hint and update it
+          if (tapHint) {
+            tapHint.classList.add('fade-out');
+            setTimeout(() => {
+              tapHint.textContent = 'tap again to continue';
+              tapHint.classList.remove('fade-out');
+            }, 300);
+          }
+        } else if (!this.checked && hasOpened && !hasTransitioned) {
+          // Second click - close envelope and transition to flowers
+          hasTransitioned = true;
+          
+          // Fade out tap hint
+          if (tapHint) {
+            tapHint.classList.add('fade-out');
+          }
+
+          // After envelope closes, transition to flowers
+          setTimeout(() => {
+            // Hide envelope scene
+            envelopeScene.classList.add('hidden');
+            
+            // Show and activate flowers scene
+            flowersScene.classList.add('visible');
+            setTimeout(() => {
+              flowersScene.classList.add('active');
+              
+              // Show letter image after flowers bloom (6 seconds after activation)
+              setTimeout(() => {
+                letterImage.classList.add('show');
+              }, 6000);
+            }, 100);
+
+            // Try to play music
+            if (bgAudio) {
+              bgAudio.play().catch(() => {});
+            }
+          }, 600); // Wait for envelope close animation to complete
+        }
+      });
+
+      // Music autoplay logic
+      function attemptPlay() {
+        if (!bgAudio) return;
+        if (!bgAudio.paused) return;
+        const p = bgAudio.play();
+        if (p !== undefined) p.catch(() => {});
+      }
+
+      // Try to play on user interaction
+      document.addEventListener('pointerdown', () => {
+        attemptPlay();
+      }, { once: true });
+
+      document.addEventListener('click', () => {
+        attemptPlay();
+      }, { once: true });
+    })();
+  </script>
+
+  <script src="main.js"></script>
+</body>
+</html>
